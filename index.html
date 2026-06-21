@@ -20,13 +20,12 @@
             padding: 0;
             background-color: var(--bg-light);
             color: var(--text-dark);
+            overflow-x: hidden;
         }
 
         .hidden { display: none !important; }
 
-        /* ==========================================
-           APP-BAR GANZ OBEN (Wieder vollständig sichtbar)
-           ========================================== */
+        /* APP-BAR GANZ OBEN */
         .app-bar {
             background: var(--primary);
             color: white;
@@ -37,7 +36,7 @@
             justify-content: space-between;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             position: relative;
-            z-index: 10;
+            z-index: 9999 !important; /* Garantiert ganz oben */
         }
 
         .app-title { 
@@ -47,47 +46,53 @@
 
         .app-actions { 
             display: flex; 
-            gap: 15px; 
+            gap: 20px; 
             align-items: center; 
         }
 
         .icon-btn {
-            background: none;
+            background: transparent;
             border: none;
             color: white;
-            font-size: 22px;
+            font-size: 24px;
             cursor: pointer;
-            padding: 4px;
-            display: inline-block;
+            padding: 8px;
+            min-width: 44px; /* Apple-Standard für Touch-Ziele */
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
         }
 
         /* Filter-Dropdown */
         .dropdown { 
             position: relative; 
-            display: inline-block; 
         }
         
         .dropdown-content {
             display: none;
             position: absolute;
             right: 0;
+            top: 45px;
             background-color: white;
             min-width: 160px;
             box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
             border-radius: 4px;
-            z-index: 200;
+            z-index: 10000 !important;
         }
         
         .dropdown-content button {
             color: black;
-            padding: 12px 16px;
+            padding: 14px 16px;
             background: none;
             border: none;
             width: 100%;
             text-align: left;
-            font-size: 14px;
+            font-size: 16px;
             cursor: pointer;
             box-sizing: border-box;
+            display: block;
         }
         
         .dropdown-content button:hover { 
@@ -98,22 +103,25 @@
             display: block !important; 
         }
 
-        /* Tab-Bar (Klickbar) */
+        /* Tab-Bar */
         .tab-bar {
             display: flex;
             background: var(--primary);
             border-top: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            z-index: 999;
         }
         
         .tab {
             flex: 1;
             text-align: center;
-            padding: 14px 0;
+            padding: 16px 0;
             color: rgba(255,255,255,0.7);
             font-weight: bold;
             cursor: pointer;
             border-bottom: 3px solid transparent;
-            font-size: 14px;
+            font-size: 15px;
+            -webkit-tap-highlight-color: transparent;
         }
         
         .tab.active-tab {
@@ -129,7 +137,7 @@
                 linear-gradient(to bottom, white 2px, transparent 2px);
             background-size: 100% 50%, 50% 100%;
             background-position: center;
-            min-height: calc(100vh - 104px);
+            min-height: calc(100vh - 108px);
             padding: 16px;
             box-sizing: border-box;
         }
@@ -174,15 +182,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 90;
+            z-index: 999;
         }
 
-        /* Overlays für Menüs */
+        /* Overlays */
         .overlay-screen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: white;
-            z-index: 300;
+            z-index: 99999 !important;
             padding: 20px;
             box-sizing: border-box;
             overflow-y: auto;
@@ -220,9 +228,9 @@
         <div class="app-bar">
             <div class="app-title">🎾 TennisMatch</div>
             <div class="app-actions">
-                <button class="icon-btn" onclick="openProfileLogic()" type="button">👤</button>
+                <button class="icon-btn" onclick="openProfileLogic()">👤</button>
                 <div class="dropdown">
-                    <button class="icon-btn" onclick="toggleFilterMenu(event)" type="button">⏳</button>
+                    <button class="icon-btn" onclick="toggleFilterMenu(event)">⏳</button>
                     <div id="filterDropdown" class="dropdown-content">
                         <button onclick="applyFilter('Alle')">Alle anzeigen</button>
                         <button onclick="applyFilter('LK 1-5')">🏆 LK 1-5</button>
@@ -230,7 +238,7 @@
                         <button onclick="applyFilter('LK 11-15')">🥉 LK 11-15</button>
                     </div>
                 </div>
-                <button class="icon-btn" onclick="handleLogout()" type="button">🚪</button>
+                <button class="icon-btn" onclick="handleLogout()">🚪</button>
             </div>
         </div>
 
@@ -285,11 +293,3 @@
                     <input type="email" id="emailInput">
                 </div>
                 <div class="form-group">
-                    <label>Passwort</label>
-                    <input type="password" id="passwordInput">
-                </div>
-                <button class="btn-main" onclick="handleAuthSubmit()">Einloggen</button>
-            </div>
-        </div>
-    </div>
-

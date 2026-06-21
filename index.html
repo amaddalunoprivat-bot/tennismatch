@@ -3,225 +3,322 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tennis Match Counter</title>
+    <title>TennisMatch</title>
     <style>
         :root {
-            --neon-green: #ccff00;
-            --bg-dark: #121212;
-            --card-bg: #1e1e1e;
-            --text-main: #ffffff;
+            --primary: #4CAF50;
+            --primary-dark: #388E3C;
+            --accent: #FF9800;
+            --bg-light: #f5f5f5;
+            --text-dark: #333;
+            --card-bg: #ffffff;
         }
+
         body {
             font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* Hilfsklassen für Sichtbarkeit */
+        .hidden { display: none !important; }
+
+        /* ==========================================
+           1. AUTH SCREEN (LOGIN & REGISTRIERUNG)
+           ========================================== */
+        .auth-container {
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             min-height: 100vh;
+            padding: 20px;
             box-sizing: border-box;
         }
-        .container {
-            width: 100%;
-            max-width: 450px;
+
+        .auth-card {
             background: var(--card-bg);
-            padding: 25px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            padding: 30px 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
             text-align: center;
-            box-sizing: border-box;
         }
-        h1 {
-            color: var(--neon-green);
-            font-size: 1.8rem;
-            margin-top: 0;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .subtitle {
-            color: #888;
-            font-size: 0.9rem;
-            margin-bottom: 25px;
-        }
-        .set-display {
-            font-size: 1.2rem;
+
+        .auth-logo {
+            font-size: 26px;
             font-weight: bold;
-            color: #aaa;
+            color: var(--primary);
+            margin-bottom: 24px;
+        }
+
+        .auth-title {
+            font-size: 16px;
+            color: #666;
             margin-bottom: 20px;
-            background: rgba(255,255,255,0.05);
-            padding: 8px 15px;
-            border-radius: 10px;
-            display: inline-block;
         }
-        .score-board {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 25px;
+
+        .form-group {
+            position: relative;
+            margin-bottom: 16px;
+            text-align: left;
         }
-        .player-card {
-            flex: 1;
-            background: rgba(255,255,255,0.02);
-            padding: 15px;
-            border-radius: 15px;
-            border: 1px solid rgba(255,255,255,0.05);
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 6px;
+            color: #555;
         }
-        .player-name {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin: 0 0 10px 0;
-            color: #ddd;
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+            outline: none;
         }
-        .score {
-            font-size: 3.5rem;
-            font-weight: 800;
-            color: #fff;
-            margin: 15px 0;
-            text-shadow: 0 2px 10px rgba(255,255,255,0.1);
-            min-height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+
+        .form-group input:focus {
+            border-color: var(--primary);
         }
-        .btn-point {
-            background-color: var(--neon-green);
-            color: #000;
+
+        .error-message {
+            color: #d32f2f;
+            font-size: 13px;
+            margin-bottom: 15px;
+            min-height: 18px;
+        }
+
+        .btn-main {
+            background: var(--primary);
+            color: white;
             border: none;
             width: 100%;
-            padding: 15px 0;
-            font-size: 1.1rem;
+            padding: 14px;
+            font-size: 16px;
             font-weight: bold;
-            border-radius: 12px;
+            border-radius: 6px;
             cursor: pointer;
-            transition: transform 0.1s, background-color 0.2s;
-            box-shadow: 0 4px 12px rgba(204, 255, 0, 0.2);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
-        .btn-point:active {
-            transform: scale(0.96);
-        }
-        .btn-reset {
-            background: transparent;
-            color: #ff4444;
-            border: 1px solid #ff4444;
-            padding: 10px 20px;
-            font-size: 0.9rem;
-            border-radius: 8px;
-            cursor: pointer;
+
+        .btn-main:active { background: var(--primary-dark); }
+
+        .btn-text {
+            background: none;
+            border: none;
+            color: var(--primary);
             margin-top: 15px;
-            transition: background 0.2s;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: underline;
         }
-        .btn-reset:active {
-            background: rgba(255, 68, 68, 0.1);
+
+        /* Loader-Animation */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 15px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* ==========================================
+           2. APP-OBERFLÄCHE (DASHBOARD)
+           ========================================== */
+        .app-bar {
+            background: var(--primary);
+            color: white;
+            padding: 0 16px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .app-title { font-size: 20px; font-weight: bold; }
+
+        .app-actions { display: flex; gap: 12px; align-items: center; }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+        }
+        .icon-btn:active { background: rgba(255,255,255,0.1); }
+
+        /* Filter-Dropdown-Menü */
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: white;
+            min-width: 150px;
+            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            z-index: 200;
+        }
+        .dropdown-content button {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .dropdown-content button:hover { background-color: #f1f1f1; }
+        .show { display: block; }
+
+        /* Tab-Bar */
+        .tab-bar {
+            display: flex;
+            background: var(--primary);
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 14px 0;
+            color: rgba(255,255,255,0.7);
+            font-weight: bold;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-size: 14px;
+        }
+        .tab.active-tab {
+            color: white;
+            border-bottom: 3px solid var(--accent);
+        }
+
+        /* Tennisplatz-Hintergrundeffekt */
+        .tennis-court-bg {
+            background-color: #3B7A57; /* Sand/Rasen-Mischton */
+            background-image: 
+                linear-gradient(to right, white 2px, transparent 2px),
+                linear-gradient(to bottom, white 2px, transparent 2px);
+            background-size: 100% 50%, 50% 100%;
+            background-position: center;
+            min-height: calc(100vh - 104px);
+            padding: 16px;
+            box-sizing: border-box;
+        }
+
+        /* Listen-Inhalte */
+        .list-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .list-card {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .badge {
+            background: #e0e0e0;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* Floating Action Button (FAB) */
+        .fab {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .fab:active { transform: scale(0.95); }
+
+        /* Profil-Ansicht Overlay */
+        .overlay-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: white;
+            z-index: 300;
+            padding: 20px;
+            box-sizing: border-box;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Tennis Counter</h1>
-    <div class="subtitle">Live-Test im Smartphone-Browser</div>
-    
-    <div class="set-display">
-        Sätze: <span id="sets1">0</span> &nbsp;:&nbsp; <span id="sets2">0</span>
+    <!-- ==========================================
+       1. SCREEN: REGISTRIERUNG & LOGIN
+       ========================================== -->
+    <div id="authScreen" class="auth-container">
+        <div class="auth-card">
+            <div class="auth-logo">🎾 TennisMatch</div>
+            <div id="authTitle" class="auth-title">🔑 Login bei TennisMatch</div>
+            
+            <div class="form-group">
+                <label>E-Mail-Adresse</label>
+                <input type="email" id="emailInput" placeholder="name@beispiel.de">
+            </div>
+            <div class="form-group">
+                <label>Passwort</label>
+                <input type="password" id="passwordInput" placeholder="******">
+            </div>
+
+            <div id="authError" class="error-message"></div>
+            <div id="authLoader" class="loader hidden"></div>
+
+            <button id="authSubmitBtn" class="btn-main" onclick="handleAuthSubmit()">Einloggen</button>
+            <button id="authToggleBtn" class="btn-text" onclick="toggleAuthMode()">Noch kein Konto? Hier registrieren</button>
+        </div>
     </div>
 
-    <div class="score-board">
-        <!-- Spieler 1 -->
-        <div class="player-card">
-            <p class="player-name">Spieler 1</p>
-            <div class="score" id="score1">0</div>
-            <button class="btn-point" onclick="scorePoint(1)">+ Punkt</button>
-        </div>
-        
-        <!-- Spieler 2 -->
-        <div class="player-card">
-            <p class="player-name">Spieler 2</p>
-            <div class="score" id="score2">0</div>
-            <button class="btn-point" onclick="scorePoint(2)">+ Punkt</button>
-        </div>
-    </div>
-
-    <button class="btn-reset" onclick="resetMatch()">Match zurücksetzen</button>
-</div>
-
-<script>
-    // Zählweise-Variablen
-    let p1Points = 0;
-    let p2Points = 0;
-    let p1Sets = 0;
-    let p2Sets = 0;
-
-    const pointsLookup = ["0", "15", "30", "40"];
-
-    function scorePoint(player) {
-        if (player === 1) {
-            p1Points++;
-        } else {
-            p2Points++;
-        }
-        checkScore();
-        updateDisplay();
-    }
-
-    function checkScore() {
-        // Logik für Spielgewinn (Klassische Tennis-Regeln)
-        if (p1Points >= 4 && p1Points - p2Points >= 2) {
-            p1Sets++;
-            resetPoints();
-        } else if (p2Points >= 4 && p2Points - p1Points >= 2) {
-            p2Sets++;
-            resetPoints();
-        }
-    }
-
-    function resetPoints() {
-        p1Points = 0;
-        p2Points = 0;
-    }
-
-    function resetMatch() {
-        if(confirm("Möchten Sie das gesamte Match zurücksetzen?")) {
-            resetPoints();
-            p1Sets = 0;
-            p2Sets = 0;
-            updateDisplay();
-        }
-    }
-
-    function updateDisplay() {
-        let s1 = "";
-        let s2 = "";
-
-        // Einstand / Vorteil Logik berechnen
-        if (p1Points >= 3 && p2Points >= 3) {
-            if (p1Points === p2Points) {
-                s1 = "40";
-                s2 = "40";
-            } else if (p1Points > p2Points) {
-                s1 = "Adv";
-                s2 = "-";
-            } else {
-                s1 = "-";
-                s2 = "Adv";
-            }
-        } else {
-            s1 = pointsLookup[p1Points] || "0";
-            s2 = pointsLookup[p2Points] || "0";
-        }
-
-        // DOM Elemente aktualisieren
-        document.getElementById('score1').innerText = s1;
-        document.getElementById('score2').innerText = s2;
-        document.getElementById('sets1').innerText = p1Sets;
-        document.getElementById('sets2').innerText = p2Sets;
-    }
-
-    // Initialer Aufruf zum Rendern
-    updateDisplay();
-</script>
-
-</body>
-</html>
+    <!-- ==========================================
+       2. SCREEN: DASHBOARD / STARTSEITE
+       ========================================== -->
+    <div id="dashboardScreen" class="hidden">
+        <div class="app-bar">
+            <div class="app-title">🎾 TennisMatch</div>
+            <div class="app-actions">
+                <button class="icon-btn" onclick="openProfile()" title="Mein Profil">👤</button>
+                <div class="dropdown">
+                    <button class="icon-btn" onclick="toggleFilterMenu()" title="Filter">⏳</button>
+                    <div id="filterDropdown" class="dropdown-content">
+                        <button onclick="applyFilter('Alle')">Alle anzeigen</button>
+                        <button onclick="applyFilter('LK 1-5')">🏆 LK 1-5</button>

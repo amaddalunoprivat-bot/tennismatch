@@ -1,240 +1,227 @@
-import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  // Connection zu deinem Firebase-Europa-Projekt auf dem PC aktivieren
-  // await Firebase.initializeApp();
-  runApp(const TennisMatchApp());
-}
-
-class TennisMatchApp extends StatelessWidget {
-  const TennisMatchApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'TennisMatch',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
-        useMaterial3: true,
-      ),
-      home: StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(body: Center(child: CircularProgressIndicator()));
-          }
-          if (snapshot.hasData) {
-            return const DashboardScreen();
-          }
-          return const AuthScreen();
-        },
-      ),
-    );
-  }
-}
-
-// =========================================================================
-// 1. REGISTRIERUNG & LOGIN SYSTEM
-// =========================================================================
-class AuthScreen extends StatefulWidget {
-  const AuthScreen({super.key});
-  @override
-  State<AuthScreen> createState() => _AuthScreenState();
-}
-
-class _AuthScreenState extends State<AuthScreen> {
-  final _formKey = GlobalKey<FormState>();
-  bool _isLoginMode = true;
-  bool _isLoading = false;
-  String _email = ''; String _password = ''; String _errorMessage = '';
-
-  Future<void> _submitAuthForm() async {
-    if (!_formKey.currentState!.validate()) return;
-    _formKey.currentState!.save();
-    setState(() { _isLoading = true; _errorMessage = ''; });
-    try {
-      if (_isLoginMode) {
-        await FirebaseAuth.instance.signInWithEmailAndPassword(email: _email, password: _password);
-      } else {
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(email: _email, password: _password);
-      }
-    } on FirebaseAuthException catch (e) {
-      setState(() { _errorMessage = e.message ?? 'Ein Fehler ist aufgetreten.'; });
-    } finally {
-      if (mounted) setState(() { _isLoading = false; });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(_isLoginMode ? '🔑 Login bei TennisMatch' : '📝 Neues Konto erstellen'), backgroundColor: Colors.green, foregroundColor: Colors.white),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Card(
-            elevation: 4,
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('🎾 TennisMatch', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.green)),
-                    const SizedBox(height: 24),
-                    TextFormField(
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(labelText: 'E-Mail-Adresse', border: OutlineInputBorder(), prefixIcon: Icon(Icons.email)),
-                      validator: (v) => v!.contains('@') ? null : 'Bitte eine gültige E-Mail eingeben',
-                      onSaved: (v) => _email = v!.trim(),
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      obscureText: true,
-                      decoration: const InputDecoration(labelText: 'Passwort', border: OutlineInputBorder(), prefixIcon: Icon(Icons.lock)),
-                      validator: (v) => v!.length >= 6 ? null : 'Mindestens 6 Zeichen lang',
-                      onSaved: (v) => _password = v!.trim(),
-                    ),
-                    if (_errorMessage.isNotEmpty) ...[
-                      const SizedBox(height: 14),
-                      Text(_errorMessage, style: const TextStyle(color: Colors.red, fontSize: 13), textAlign: TextAlign.center),
-                    ],
-                    const SizedBox(height: 24),
-                    _isLoading
-                      ? const CircularProgressIndicator()
-                      : ElevatedButton(
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, minimumSize: const Size(double.infinity, 50)),
-                          onPressed: _submitAuthForm,
-                          child: Text(_isLoginMode ? 'Einloggen' : 'Jetzt Registrieren', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                        ),
-                    TextButton(
-                      onPressed: () => setState(() => _isLoginMode = !_isLoginMode),
-                      child: Text(_isLoginMode ? 'Noch kein Konto? Hier registrieren' : 'Zum Login wechseln'),
-                    )
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// =========================================================================
-// 2. DASHBOARD / STARTSEITE
-// =========================================================================
-class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
-  @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
-}
-
-class _DashboardScreenState extends State<DashboardScreen> {
-  String _activeFilter = 'Alle';
-
-  @override
-  Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('🎾 TennisMatch', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          backgroundColor: Colors.green, foregroundColor: Colors.white,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.account_circle, size: 28),
-              tooltip: 'Mein Profil & Rechtstexte',
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen())),
-            ),
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.filter_alt, color: Colors.white),
-              onSelected: (v) => setState(() => _activeFilter = v),
-              itemBuilder: (context) => [
-                const PopupMenuItem(value: 'Alle', child: Text('Alle anzeigen')),
-                const PopupMenuItem(value: 'LK 1-5', child: Text('🏆 LK 1-5')),
-                const PopupMenuItem(value: 'LK 6-10', child: Text('🥈 LK 6-10')),
-                const PopupMenuItem(value: 'LK 11-15', child: Text('🥉 LK 11-15')),
-              ],
-            ),
-            IconButton(icon: const Icon(Icons.exit_to_app), onPressed: () => FirebaseAuth.instance.signOut())
-          ],
-          bottom: const TabBar(labelColor: Colors.white, unselectedLabelColor: Colors.white70, indicatorColor: Colors.orangeAccent, tabs: [Tab(text: "Spieler-Scout"), Tab(text: "Vereine & Gesuche")]),
-        ),
-        body: Column(
-          children: [
-            Expanded(
-              child: TennisCourtBackground(
-                child: TabBarView(
-                  children: [
-                    PlayerListTab(currentFilter: _activeFilter),
-                    const ClubListTab(),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-        floatingActionButton: Builder(
-          builder: (context) => FloatingActionButton(
-            backgroundColor: Colors.orangeAccent,
-            onPressed: () {
-              final tabIndex = DefaultTabController.of(context).index;
-              if (tabIndex == 0) {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const AddPlayerScreen()));
-              } else {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const AddClubSearchScreen()));
-              }
-            },
-            child: const Icon(Icons.add, color: Colors.white),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// =========================================================================
-// 3. REITER: SPIELER-SCOUT
-// =========================================================================
-class PlayerListTab extends StatelessWidget {
-  final String currentFilter;
-  const PlayerListTab({super.key, required this.currentFilter});
-
-  String _getChatRoomId(String userA, String userB) {
-    List<String> ids = [userA, userB];
-    ids.sort();
-    return ids.join("_");
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('players').snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) return const Center(child: Text('Fehler beim Laden...'));
-        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-       
-        final docs = snapshot.data!.docs;
-        final filteredDocs = docs.where((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          return currentFilter == 'Alle' || data['lkGroup'] == currentFilter;
-        }).toList();
-
-        if (filteredDocs.isEmpty) {
-          return const Center(child: Text('Keine Profile online.', style: TextStyle(color: Colors.white, fontStyle: FontStyle.italic)));
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tennis Match Counter</title>
+    <style>
+        :root {
+            --neon-green: #ccff00;
+            --bg-dark: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #ffffff;
         }
-       
-        return ListView.builder(
-          padding: const EdgeInsets.all(8),
-          itemCount: filteredDocs.length,
-          itemBuilder: (context, index) {
-            final player = filteredDocs[index].data() as Map<String, dynamic>;
+        body {
+            font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .container {
+            width: 100%;
+            max-width: 450px;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+            box-sizing: border-box;
+        }
+        h1 {
+            color: var(--neon-green);
+            font-size: 1.8rem;
+            margin-top: 0;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .subtitle {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+        }
+        .set-display {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #aaa;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.05);
+            padding: 8px 15px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+        .score-board {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        .player-card {
+            flex: 1;
+            background: rgba(255,255,255,0.02);
+            padding: 15px;
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .player-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0 0 10px 0;
+            color: #ddd;
+        }
+        .score {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #fff;
+            margin: 15px 0;
+            text-shadow: 0 2px 10px rgba(255,255,255,0.1);
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-point {
+            background-color: var(--neon-green);
+            color: #000;
+            border: none;
+            width: 100%;
+            padding: 15px 0;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.2s;
+            box-shadow: 0 4px 12px rgba(204, 255, 0, 0.2);
+        }
+        .btn-point:active {
+            transform: scale(0.96);
+        }
+        .btn-reset {
+            background: transparent;
+            color: #ff4444;
+            border: 1px solid #ff4444;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background 0.2s;
+        }
+        .btn-reset:active {
+            background: rgba(255, 68, 68, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Tennis Counter</h1>
+    <div class="subtitle">Live-Test im Smartphone-Browser</div>
+    
+    <div class="set-display">
+        Sätze: <span id="sets1">0</span> &nbsp;:&nbsp; <span id="sets2">0</span>
+    </div>
+
+    <div class="score-board">
+        <!-- Spieler 1 -->
+        <div class="player-card">
+            <p class="player-name">Spieler 1</p>
+            <div class="score" id="score1">0</div>
+            <button class="btn-point" onclick="scorePoint(1)">+ Punkt</button>
+        </div>
+        
+        <!-- Spieler 2 -->
+        <div class="player-card">
+            <p class="player-name">Spieler 2</p>
+            <div class="score" id="score2">0</div>
+            <button class="btn-point" onclick="scorePoint(2)">+ Punkt</button>
+        </div>
+    </div>
+
+    <button class="btn-reset" onclick="resetMatch()">Match zurücksetzen</button>
+</div>
+
+<script>
+    // Zählweise-Variablen
+    let p1Points = 0;
+    let p2Points = 0;
+    let p1Sets = 0;
+    let p2Sets = 0;
+
+    const pointsLookup = ["0", "15", "30", "40"];
+
+    function scorePoint(player) {
+        if (player === 1) {
+            p1Points++;
+        } else {
+            p2Points++;
+        }
+        checkScore();
+        updateDisplay();
+    }
+
+    function checkScore() {
+        // Logik für Spielgewinn (Klassische Tennis-Regeln)
+        if (p1Points >= 4 && p1Points - p2Points >= 2) {
+            p1Sets++;
+            resetPoints();
+        } else if (p2Points >= 4 && p2Points - p1Points >= 2) {
+            p2Sets++;
+            resetPoints();
+        }
+    }
+
+    function resetPoints() {
+        p1Points = 0;
+        p2Points = 0;
+    }
+
+    function resetMatch() {
+        if(confirm("Möchten Sie das gesamte Match zurücksetzen?")) {
+            resetPoints();
+            p1Sets = 0;
+            p2Sets = 0;
+            updateDisplay();
+        }
+    }
+
+    function updateDisplay() {
+        let s1 = "";
+        let s2 = "";
+
+        // Einstand / Vorteil Logik berechnen
+        if (p1Points >= 3 && p2Points >= 3) {
+            if (p1Points === p2Points) {
+                s1 = "40";
+                s2 = "40";
+            } else if (p1Points > p2Points) {
+                s1 = "Adv";
+                s2 = "-";
+            } else {
+                s1 = "-";
+                s2 = "Adv";
+            }
+        } else {
+            s1 = pointsLookup[p1Points] || "0";
+            s2 = pointsLookup[p2Points] || "0";
+        }
+
+        // DOM Elemente aktualisieren
+        document.getElementById('score1').innerText = s1;
+        document.getElementById('score2').innerText = s2;
+        document.getElementById('sets1').innerText = p1Sets;
+        document.getElementById('sets2').innerText = p2Sets;
+    }
+
+    // Initialer Aufruf zum Rendern
+    updateDisplay();
+</script>
+
+</body>
+</html>

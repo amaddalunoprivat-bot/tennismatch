@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TennisMatch</title>
     <style>
         :root {
@@ -20,14 +20,12 @@
             padding: 0;
             background-color: var(--bg-light);
             color: var(--text-dark);
-            -webkit-user-select: none;
-            user-select: none;
         }
 
         .hidden { display: none !important; }
 
         /* ==========================================
-           1. APP-OBERFLÄCHE (DASHBOARD ALS STARTSEITE)
+           APP-BAR GANZ OBEN (Wieder vollständig sichtbar)
            ========================================== */
         .app-bar {
             background: var(--primary);
@@ -37,60 +35,76 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 100;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 10;
         }
 
-        .app-title { font-size: 20px; font-weight: bold; }
+        .app-title { 
+            font-size: 20px; 
+            font-weight: bold; 
+        }
 
-        .app-actions { display: flex; gap: 12px; align-items: center; }
+        .app-actions { 
+            display: flex; 
+            gap: 15px; 
+            align-items: center; 
+        }
 
         .icon-btn {
             background: none;
             border: none;
             color: white;
-            font-size: 20px;
+            font-size: 22px;
             cursor: pointer;
-            padding: 8px;
-            border-radius: 50%;
+            padding: 4px;
+            display: inline-block;
         }
-        .icon-btn:active { background: rgba(255,255,255,0.1); }
 
         /* Filter-Dropdown */
-        .dropdown { position: relative; display: inline-block; }
+        .dropdown { 
+            position: relative; 
+            display: inline-block; 
+        }
+        
         .dropdown-content {
             display: none;
             position: absolute;
             right: 0;
             background-color: white;
-            min-width: 150px;
+            min-width: 160px;
             box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
             border-radius: 4px;
             z-index: 200;
         }
+        
         .dropdown-content button {
             color: black;
             padding: 12px 16px;
-            text-decoration: none;
-            display: block;
             background: none;
             border: none;
             width: 100%;
             text-align: left;
             font-size: 14px;
             cursor: pointer;
+            box-sizing: border-box;
         }
-        .dropdown-content button:hover { background-color: #f1f1f1; }
-        .show { display: block; }
+        
+        .dropdown-content button:hover { 
+            background-color: #f1f1f1; 
+        }
+        
+        .show { 
+            display: block !important; 
+        }
 
-        /* Tab-Bar */
+        /* Tab-Bar (Klickbar) */
         .tab-bar {
             display: flex;
             background: var(--primary);
             border-top: 1px solid rgba(255,255,255,0.1);
         }
+        
         .tab {
             flex: 1;
             text-align: center;
@@ -101,6 +115,7 @@
             border-bottom: 3px solid transparent;
             font-size: 14px;
         }
+        
         .tab.active-tab {
             color: white;
             border-bottom: 3px solid var(--accent);
@@ -119,7 +134,10 @@
             box-sizing: border-box;
         }
 
-        .list-container { max-width: 600px; margin: 0 auto; }
+        .list-container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+        }
 
         .list-card {
             background: white;
@@ -140,7 +158,6 @@
             font-weight: bold;
         }
 
-        /* Floating Action Button (FAB) */
         .fab {
             position: fixed;
             bottom: 24px;
@@ -159,11 +176,8 @@
             justify-content: center;
             z-index: 90;
         }
-        .fab:active { transform: scale(0.95); }
 
-        /* ==========================================
-           2. OVERLAYS (LOGIN & PROFILE SCREENS)
-           ========================================== */
+        /* Overlays für Menüs */
         .overlay-screen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -178,54 +192,37 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 90vh;
+            min-height: 80vh;
         }
 
         .auth-card {
             background: var(--card-bg);
-            padding: 20px 10px;
+            padding: 20px;
             width: 100%;
             max-width: 400px;
             text-align: center;
         }
 
-        .auth-logo { font-size: 26px; font-weight: bold; color: var(--primary); margin-bottom: 24px; }
-        .auth-title { font-size: 16px; color: #666; margin-bottom: 20px; }
-
         .form-group { margin-bottom: 16px; text-align: left; }
         .form-group label { display: block; font-size: 14px; margin-bottom: 6px; color: #555; }
-        .form-group input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; box-sizing: border-box; outline: none; }
-        .form-group input:focus { border-color: var(--primary); }
-
-        .error-message { color: #d32f2f; font-size: 13px; margin-bottom: 15px; min-height: 18px; }
+        .form-group input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; box-sizing: border-box; }
 
         .btn-main {
             background: var(--primary); color: white; border: none; width: 100%; padding: 14px;
-            font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer;
         }
-        .btn-main:active { background: var(--primary-dark); }
-
-        .btn-text { background: none; border: none; color: var(--primary); margin-top: 15px; font-size: 14px; cursor: pointer; text-decoration: underline; }
-
-        .loader {
-            border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%;
-            width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 15px auto;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <!-- ==========================================
-       STARTSEITE: DASHBOARD SCREEN (Jetzt direkt sichtbar)
-       ========================================== -->
+    <!-- HAUPTANSICHT -->
     <div id="dashboardScreen">
         <div class="app-bar">
             <div class="app-title">🎾 TennisMatch</div>
             <div class="app-actions">
-                <button class="icon-btn" onclick="openProfileLogic()" title="Mein Profil / Login">👤</button>
+                <button class="icon-btn" onclick="openProfileLogic()" type="button">👤</button>
                 <div class="dropdown">
-                    <button class="icon-btn" onclick="toggleFilterMenu()" title="Filter">⏳</button>
+                    <button class="icon-btn" onclick="toggleFilterMenu(event)" type="button">⏳</button>
                     <div id="filterDropdown" class="dropdown-content">
                         <button onclick="applyFilter('Alle')">Alle anzeigen</button>
                         <button onclick="applyFilter('LK 1-5')">🏆 LK 1-5</button>
@@ -233,6 +230,7 @@
                         <button onclick="applyFilter('LK 11-15')">🥉 LK 11-15</button>
                     </div>
                 </div>
+                <button class="icon-btn" onclick="handleLogout()" type="button">🚪</button>
             </div>
         </div>
 
@@ -242,27 +240,56 @@
         </div>
 
         <div class="tennis-court-bg">
-            <!-- TAB 0: Spieler-Scout -->
+            <!-- SPIELER SCOUT LISTE -->
             <div id="tabContent0" class="list-container">
                 <div class="list-card" data-lk="3">
-                    <div><strong>Max Mustermann</strong><br><span style="font-size:13px; color:#555;">TC Blau-Weiß</span></div>
+                    <div><strong>Max Mustermann</strong><br><span style="font-size:13px; color:#edf4ed;">TC Blau-Weiß</span></div>
                     <span class="badge" style="background:#ffcc00;">LK 3</span>
                 </div>
                 <div class="list-card" data-lk="8">
-                    <div><strong>Anna Schmidt</strong><br><span style="font-size:13px; color:#555;">Tennisclub Grün</span></div>
+                    <div><strong>Anna Schmidt</strong><br><span style="font-size:13px; color:#edf4ed;">Tennisclub Grün</span></div>
                     <span class="badge" style="background:#cccccc;">LK 8</span>
                 </div>
                 <div class="list-card" data-lk="14">
-                    <div><strong>Kevin Müller</strong><br><span style="font-size:13px; color:#555;">SV Hamburg</span></div>
+                    <div><strong>Kevin Müller</strong><br><span style="font-size:13px; color:#edf4ed;">SV Hamburg</span></div>
                     <span class="badge" style="background:#cd7f32; color:white;">LK 14</span>
                 </div>
             </div>
 
-            <!-- TAB 1: Vereine & Gesuche -->
+            <!-- VEREINE & GESUCHE LISTE -->
             <div id="tabContent1" class="list-container hidden">
                 <div class="list-card">
-                    <div><strong>TC Gold-West</strong><br><span style="font-size:13px; color:#555;">Suchen Herren 30 Spieler</span></div>
+                    <div><strong>TC Gold-West</strong><br><span style="font-size:13px; color:#edf4ed;">Suchen Herren 30 Spieler</span></div>
                     <span class="badge">Gesuch</span>
                 </div>
                 <div class="list-card">
-                    <div><strong>VfL Tennis</strong><br><span style="font-size:13px; color:#555;">Trainer für Jugend gesucht</span></div>
+                    <div><strong>VfL Tennis</strong><br><span style="font-size:13px; color:#edf4ed;">Trainer für Jugend gesucht</span></div>
+                    <span class="badge">Job</span>
+                </div>
+            </div>
+        </div>
+
+        <button class="fab" onclick="handleFabClick()">+</button>
+    </div>
+
+    <!-- LOGIN MASK OVERLAY -->
+    <div id="authScreen" class="overlay-screen hidden">
+        <div style="text-align: right;">
+            <button class="btn-main" style="width:auto; padding:8px 16px; background:#666;" onclick="closeAuthScreen()">Abbrechen</button>
+        </div>
+        <div class="auth-container">
+            <div class="auth-card">
+                <h2 style="color:var(--primary);">🎾 TennisMatch Login</h2>
+                <div class="form-group">
+                    <label>E-Mail-Adresse</label>
+                    <input type="email" id="emailInput">
+                </div>
+                <div class="form-group">
+                    <label>Passwort</label>
+                    <input type="password" id="passwordInput">
+                </div>
+                <button class="btn-main" onclick="handleAuthSubmit()">Einloggen</button>
+            </div>
+        </div>
+    </div>
+
